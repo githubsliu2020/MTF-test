@@ -31,11 +31,12 @@ import os                                                                      #
 import cv2                                                                     #导入OpenCv程序库模組
 import numpy as np                                                             #导入python中的数值分析,矩阵运算的程序库模組
 import csv                                                                     #導入csv程式庫模組
-import progressbar                                                             #導入進度bar模組
+import time
+from progress.bar import Bar                                                             #導入進度bar模組
 #=====起始:建立MTF.csv==============================================
 def create_csv(MTF_path):
     with open(MTF_path,'w', newline='' ,encoding='utf-8') as f:                 #沒有的話建立MTF.csv在指定路徑MTF_path下
-        f.write('#srcImg,UCT,CT,LCT,UC-L,UC-R,LC-L,LC-R\n')                     #寫入文件內文標題
+        f.write('#srcImg,UCT_A,CT_B,LCT_C,UC-L_D,UC-R_E,LC-L_F,LC-R_G\n')                     #寫入文件內文標題
         csv.writer(f)  
         #print('進入起始:建立MTF.csv')                                            #確認進入起始功能
     return                                                                      #注意return的階層必須為def次一層,否則不會印出標題
@@ -74,8 +75,8 @@ def scrImg_directory(srcImg_path,roi_path,img_count):
     srcImg = cv2.imread(srcImg_path + '/' + 'src_Img'+'%d.bmp'%img_count)       #打開srcImg_path下的來源圖檔srcImg
     #print('打開來源圖檔:' ,'src_Img'+'%d.bmp'%img_count)              
     h,w = (20,60)                                                               #設置ROI高寬
-    x=[880 ,890 ,890 ,180 ,1650 ,390 ,1445]                                     #設置UCT,CT,LCT,UC_L,UC_R,LC_L,LC_R的ROI座標
-    y=[360 ,710 ,970 ,360 ,360 ,960 ,980]
+    x=[900 ,900 ,910 ,180 ,1635 ,425 ,1380]                                     #設置UCT,CT,LCT,UC_L,UC_R,LC_L,LC_R的ROI座標
+    y=[360 ,710 ,930 ,390 ,380 ,930 ,930]
 
     j = 0                         
     for j in range(len(x)):                                                     #產生ROI座標的截圖
@@ -154,11 +155,13 @@ def main():
     read_directory(read_path)                                                   #進入功能一:讀取目錄並重新序列檔名另存於新路徑
     srcImg_path = 'C:/MTF/IMG'                                                  #序列檔名後的图片資料夾路徑
     path = 'C:/MTF/ROI/'                                                        #创建ROI圖片儲存的路径
-    num = len([name for name in os.listdir(srcImg_path) if os.path.isfile(os.path.join(srcImg_path, name))]) #統計srcImg_path資料夾下的檔案數量 
+    
+    num = len([name for name in os.listdir(srcImg_path) if os.path.isfile(os.path.join(srcImg_path, name))])
+                                                                                #統計srcImg_path資料夾下的檔案數量 
                                                                                 #如統計資料夾數量，用 os.path.isdir(path)做判斷語句。                                         
     MTF_file = []
     s = 0                                                                      #建立起始計數以記錄讀圖並更新進度bar
-    bar = progressbar.ProgressBar(max_value=num)                               #建立progressBar進度bar模組  
+    bar = Bar('Countdown', max = num, encoding='utf-8')                                          #建立progressBar進度bar模組  
     for img_count in range(num) :                                              #以scrImg檔案數量來決定要建立幾個ROI存檔的資料夾數(目前10~14個取樣步數)
         img_count = img_count + 1
         s = s + 1
@@ -167,9 +170,10 @@ def main():
         scrImg_directory(srcImg_path ,roi_path ,img_count)                      #進入功能二:设置ROI擷取区域的宽度高度並存入擷取圖                                                                                                              
         MTF=MTF_cal(roi_path ,img_count)
         MTF_file.append(MTF)                                                   #進入功能三:計算每一張圖片的七個MTF數據   
-        bar.update(img_count)
+        bar.next()
+        time.sleep(1)
+    bar.finish()
     write_file(MTF_path ,MTF_file ,img_count)
     print('完成計算')
- 
    
 main()
